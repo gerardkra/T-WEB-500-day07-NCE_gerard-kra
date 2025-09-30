@@ -1,0 +1,104 @@
+document.addEventListener('DOMContentLoaded', () => {
+  // --- Canvas setup ---
+  const canvas = document.querySelector('canvas');
+  if (!canvas) {
+    console.error('task05: no <canvas> found in the page.');
+    return;
+  }
+
+  // Logical drawing buffer (per spec): 20x20
+  const logicalW = 20, logicalH = 20;
+  canvas.width = logicalW;
+  canvas.height = logicalH;
+
+  // Make the canvas display bigger so the tiny 6..14 coordinates are visible.
+  // This is CSS-only (no HTML edit). We will scale the drawing to keep a crisp 1px border.
+  const displayW = 160, displayH = 160;
+  canvas.style.width = displayW + 'px';
+  canvas.style.height = displayH + 'px';
+  // Give a dark background so white fill becomes visible on a white page
+  canvas.style.backgroundColor = '#444';
+  canvas.style.display = 'block'; // ensure it's visible
+  canvas.style.margin = '6px 0';
+
+  const ctx = canvas.getContext('2d');
+  if (!ctx) {
+    console.error('task05: 2D context unavailable.');
+    return;
+  }
+
+  // Reset transform and scale so coordinates remain exact but are visually enlarged.
+  const scale = displayW / logicalW;           // e.g. 160 / 20 = 8
+  ctx.setTransform(scale, 0, 0, scale, 0, 0);  // scale coordinate system
+
+  // Clear (in logical coordinates)
+  ctx.clearRect(0, 0, logicalW, logicalH);
+
+  // Draw triangle using the required coordinates
+  ctx.beginPath();
+  ctx.moveTo(6, 6);
+  ctx.lineTo(14, 10);
+  ctx.lineTo(6, 14);
+  ctx.closePath();
+
+  ctx.fillStyle = 'white';
+  ctx.fill();
+
+  // To get a 1px visible border on screen we set lineWidth = 1/scale (because ctx is scaled)
+  ctx.lineWidth = 1 / scale;
+  ctx.strokeStyle = 'black';
+  ctx.stroke();
+
+  console.log('task05: triangle drawn (logical 20x20, displayed ' + displayW + 'x' + displayH + ').');
+
+  // --- Audio & buttons setup ---
+  const audio = new Audio('https://universal-soundbank.com/sounds/13631.mp3');
+  audio.preload = 'none';
+
+  const footer = document.querySelector('footer');
+  if (!footer) {
+    console.warn('task05: <footer> not found; cannot attach audio controls.');
+    return;
+  }
+
+  // The HTML has two footer divs: first holds canvas, second holds buttons.
+  const divs = footer.querySelectorAll('div');
+  const btnContainer = divs.length >= 2 ? divs[1] : footer;
+
+  // Ensure there is a Play button (we insert it dynamically so we don't modify the HTML file)
+  let buttons = Array.from(btnContainer.querySelectorAll('button'));
+  const hasPlay = buttons.some(b => b.textContent.trim().toLowerCase() === 'play');
+  if (!hasPlay) {
+    const playBtn = document.createElement('button');
+    playBtn.textContent = 'Play';
+    // put Play as the first button (the rest were Pause/Stop/Mute)
+    btnContainer.insertBefore(playBtn, buttons[0] || null);
+    buttons = Array.from(btnContainer.querySelectorAll('button'));
+  }
+
+  // Map buttons by their text label where possible
+  const byLabel = {};
+  buttons.forEach(b => byLabel[b.textContent.trim().toLowerCase()] = b);
+
+  const playBtn = byLabel.play || buttons[0];
+  const pauseBtn = byLabel.pause || buttons[1];
+  const stopBtn = byLabel.stop || buttons[2];
+  const muteBtn = byLabel.mute || buttons[3];
+
+  if (playBtn) {
+    playBtn.addEventListener('click', () => {
+      audio.play().catch(err => console.warn('Audio play blocked or failed:', err));
+    });
+  }
+  if (pauseBtn) {
+    pauseBtn.addEventListener('click', () => audio.pause());
+  }
+  if (stopBtn) {
+    stopBtn.addEventListener('click', () => { audio.pause(); audio.currentTime = 0; });
+  }
+  if (muteBtn) {
+    muteBtn.addEventListener('click', () => { audio.muted = !audio.muted; });
+  }
+
+  console.log('task05: audio controls wired (Play/Pause/Stop/Mute).');
+});
