@@ -1,4 +1,3 @@
-// script/task06.js
 document.addEventListener("DOMContentLoaded", () => {
   const canvas = document.querySelector("footer canvas");     // black square
   const box = canvas.parentElement;                           // white container
@@ -36,3 +35,4 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.addEventListener("mouseup", () => dragging = false);
 });
+
